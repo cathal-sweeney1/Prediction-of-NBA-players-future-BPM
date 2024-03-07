@@ -1,0 +1,404 @@
+---
+title: "Linear Regression"
+author: "Cathal Sweeney (20320166)"
+date: "2024-03-05"
+output: html_document
+---
+
+
+```{r}
+library(ggcorrplot)
+library(car)
+library(tidyverse)
+library(VIM)
+library(tidymodels)
+library(vcd)
+
+```
+
+```{r}
+data_split <- initial_split(NBA_screened1, prop = 3/4)
+
+# Create data frames for the two sets:
+train_data <- training(data_split)
+test_data  <- testing(data_split)
+
+```
+
+#Cross Validation - creating 10 folds for  cross validation
+```{r}
+library(tidyverse)
+set.seed(345)
+folds <- vfold_cv(train_data, v = 10)
+folds
+```
+#variables for transformation
+#per,ts_pct,bpm,stl_pct,ws_per_48,fg2_pct,fg_pct,ft_pct,fg_pct,ft_pct,orb_per_g,pf_per_g,fta_per_fga_pct,fg3a_per_fga_pct
+
+```{r}
+# Define your tuning grid
+degree_grid <- tibble(degree = seq(1, 5, by = 1))  # Degrees from 1 to 5
+```
+
+```{r}
+per_var <- recipe(next_seas_bpm ~ per, data = train_data) %>% step_poly(per, degree = tune())
+```
+
+```{r}
+per_var_wf <- workflow() %>%
+  add_recipe(per_var) %>%
+  add_model(linear_reg())
+```
+
+```{r}
+tuned_model <- per_var_wf %>%
+  tune_grid(resamples = folds, grid = degree_grid, control = control_grid(verbose = TRUE))
+```
+
+```{r}
+collect_metrics(tuned_model)
+```
+
+
+```{r}
+show_best(tuned_model)
+```
+#Variable 2 true shooting percentage 
+```{r}
+ts_pct_var <- recipe(next_seas_bpm ~ ts_pct, data = train_data) %>% step_poly(ts_pct, degree = tune())
+```
+
+```{r}
+ts_pct_var_wf <- workflow() %>%
+  add_recipe(ts_pct_var) %>%
+  add_model(linear_reg())
+```
+
+```{r}
+tuned_model <- ts_pct_var_wf %>%
+  tune_grid(resamples = folds, grid = degree_grid, control = control_grid(verbose = TRUE))
+```
+
+```{r}
+collect_metrics(tuned_model)
+```
+
+
+```{r}
+show_best(tuned_model)
+```
+#bpm variable 3 
+
+```{r}
+bpm_var <- recipe(next_seas_bpm ~ bpm, data = train_data) %>% step_poly(bpm, degree = tune())
+```
+
+```{r}
+bpm_var_wf <- workflow() %>%
+  add_recipe(bpm_var) %>%
+  add_model(linear_reg())
+```
+
+```{r}
+tuned_model <- bpm_var_wf %>%
+  tune_grid(resamples = folds, grid = degree_grid, control = control_grid(verbose = TRUE))
+```
+
+```{r}
+collect_metrics(tuned_model)
+```
+
+
+```{r}
+show_best(tuned_model)
+```
+
+#variable 4 stl_pct
+```{r}
+stl_pct_var <- recipe(next_seas_bpm ~ stl_pct, data = train_data) %>% step_poly(stl_pct, degree = tune())
+```
+
+```{r}
+stl_pct_var_wf <- workflow() %>%
+  add_recipe(stl_pct_var) %>%
+  add_model(linear_reg())
+```
+
+```{r}
+tuned_model <- stl_pct_var_wf %>%
+  tune_grid(resamples = folds, grid = degree_grid, control = control_grid(verbose = TRUE))
+```
+
+```{r}
+collect_metrics(tuned_model)
+```
+
+
+```{r}
+show_best(tuned_model)
+```
+
+#variable 5 ws_per_48
+
+```{r}
+ws_per_48_var <- recipe(next_seas_bpm ~ ws_per_48, data = train_data) %>% step_poly(ws_per_48, degree = tune())
+```
+
+```{r}
+ws_per_48_var_wf <- workflow() %>%
+  add_recipe(ws_per_48_var) %>%
+  add_model(linear_reg())
+```
+
+```{r}
+tuned_model <- ws_per_48_var_wf %>%
+  tune_grid(resamples = folds, grid = degree_grid, control = control_grid(verbose = TRUE))
+```
+
+```{r}
+collect_metrics(tuned_model)
+```
+
+
+```{r}
+show_best(tuned_model)
+```
+
+#variable 6 fg2_pct
+```{r}
+fg2_pct_var <- recipe(next_seas_bpm ~ fg2_pct, data = train_data) %>% step_poly(fg2_pct, degree = tune())
+```
+
+```{r}
+fg2_pct_var_wf <- workflow() %>%
+  add_recipe(fg2_pct_var) %>%
+  add_model(linear_reg())
+```
+
+```{r}
+tuned_model <- fg2_pct_var_wf %>%
+  tune_grid(resamples = folds, grid = degree_grid, control = control_grid(verbose = TRUE))
+```
+
+```{r}
+collect_metrics(tuned_model)
+```
+
+
+```{r}
+show_best(tuned_model)
+```
+
+#variable 7 fg_pct
+```{r}
+fg_pct_var <- recipe(next_seas_bpm ~ fg_pct, data = train_data) %>% step_poly(fg_pct, degree = tune())
+```
+
+```{r}
+fg_pct_var_wf <- workflow() %>%
+  add_recipe(fg_pct_var) %>%
+  add_model(linear_reg())
+```
+
+```{r}
+tuned_model <- fg_pct_var_wf %>%
+  tune_grid(resamples = folds, grid = degree_grid, control = control_grid(verbose = TRUE))
+```
+
+```{r}
+collect_metrics(tuned_model)
+```
+
+
+```{r}
+show_best(tuned_model)
+```
+
+#variable 8 ft_pct
+```{r}
+ft_pct_var <- recipe(next_seas_bpm ~ ft_pct, data = train_data) %>% step_poly(ft_pct, degree = tune())
+```
+
+```{r}
+ft_pct_var_wf <- workflow() %>%
+  add_recipe(ft_pct_var) %>%
+  add_model(linear_reg())
+```
+
+```{r}
+tuned_model <- ft_pct_var_wf %>%
+  tune_grid(resamples = folds, grid = degree_grid, control = control_grid(verbose = TRUE))
+```
+
+```{r}
+collect_metrics(tuned_model)
+```
+
+
+```{r}
+show_best(tuned_model)
+```
+
+#variable 9 orb_per_g
+```{r}
+orb_per_g_var <- recipe(next_seas_bpm ~ orb_per_g, data = train_data) %>% step_poly(orb_per_g, degree = tune())
+```
+
+```{r}
+orb_per_g_var_wf <- workflow() %>%
+  add_recipe(orb_per_g_var) %>%
+  add_model(linear_reg())
+```
+
+```{r}
+tuned_model <- orb_per_g_var_wf %>%
+  tune_grid(resamples = folds, grid = degree_grid, control = control_grid(verbose = TRUE))
+```
+
+```{r}
+collect_metrics(tuned_model)
+```
+
+
+```{r}
+show_best(tuned_model)
+```
+##variable 10 pf_per_g
+```{r}
+pf_per_g_var <- recipe(next_seas_bpm ~ pf_per_g, data = train_data) %>% step_poly(pf_per_g, degree = tune())
+```
+
+```{r}
+pf_per_g_var_wf <- workflow() %>%
+  add_recipe(pf_per_g_var) %>%
+  add_model(linear_reg())
+```
+
+```{r}
+tuned_model <- pf_per_g_var_wf %>%
+  tune_grid(resamples = folds, grid = degree_grid, control = control_grid(verbose = TRUE))
+```
+
+```{r}
+collect_metrics(tuned_model)
+```
+
+
+```{r}
+show_best(tuned_model)
+```
+
+###variable 11 fta_per_fga_pct
+```{r}
+fta_per_fga_pct_var <- recipe(next_seas_bpm ~ fta_per_fga_pct, data = train_data) %>% step_poly(fta_per_fga_pct, degree = tune())
+```
+
+```{r}
+fta_per_fga_pct_var_wf <- workflow() %>%
+  add_recipe(fta_per_fga_pct_var) %>%
+  add_model(linear_reg())
+```
+
+```{r}
+tuned_model <- fta_per_fga_pct_var_wf %>%
+  tune_grid(resamples = folds, grid = degree_grid, control = control_grid(verbose = TRUE))
+```
+
+```{r}
+collect_metrics(tuned_model)
+```
+
+
+```{r}
+show_best(tuned_model)
+```
+
+##fg3a_per_fga_pct
+```{r}
+fg3a_per_fga_pct_var <- recipe(next_seas_bpm ~ fg3a_per_fga_pct, data = train_data) %>% step_poly(fg3a_per_fga_pct, degree = tune())
+```
+
+```{r}
+fg3a_per_fga_pct_var_wf <- workflow() %>%
+  add_recipe(fg3a_per_fga_pct_var) %>%
+  add_model(linear_reg())
+```
+
+```{r}
+tuned_model <- fg3a_per_fga_pct_var_wf %>%
+  tune_grid(resamples = folds, grid = degree_grid, control = control_grid(verbose = TRUE))
+```
+
+```{r}
+collect_metrics(tuned_model)
+```
+
+
+```{r}
+show_best(tuned_model)
+```
+
+#post transformation
+
+
+
+```{r}
+lr_mod <- 
+  linear_reg() %>%
+  set_engine("lm") %>%
+  set_mode("regression")
+```
+
+```{r}
+# Combine all recipes into one
+full_recipe <- 
+  recipe(next_seas_bpm ~ usg_pct + age + fg3a_per_fga_pct + fg2_pct + trb_pct + ft_pct+ fta_per_fga_pct +  ft_per_g + ast_per_g + pts_per_g + mp  + trb_per_g + gs + g + mp_per_g  + fg_pct + fg3_per_g   + fg2_per_g   + orb_per_g + orb_pct + stl_per_g + blk_per_g + tov_per_g + pf_per_g + per + ts_pct + fta_per_fga_pct + stl_pct + tov_pct + bpm +pos , data = train_data)
+```
+
+
+#Creating a Workflow for a linear regression Model
+```{r}
+lr_wf_new <- 
+  workflow() %>%
+  add_model(lr_mod) %>%
+  add_recipe(full_recipe )
+```
+
+
+```{r}
+set.seed(456)
+lr_wf_new_fit <- 
+  lr_wf_new %>%
+  fit(data = train_data)
+lr_wf_new_fit
+```
+
+```{r}
+linear_reg_new_fit <- lr_wf_new_fit %>%
+  fit_resamples(folds)
+```
+
+
+```{r}
+collect_metrics(linear_reg_new_fit)
+```
+
+
+```{r}
+glmnet_fit
+```
+
+```{r}
+glmnet_final_fit <- glmnet_wflow_new %>% 
+  fit(data = train_data)
+
+library(yardstick)
+predict1 <- predict(glmnet_final_fit, new_data = test_data)
+rmse_vec(test_data$next_seas_bpm, estimate = predict1$.pred)
+```
+
+
+
+
+
+

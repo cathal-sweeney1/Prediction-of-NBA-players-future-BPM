@@ -1,0 +1,114 @@
+---
+title: "Random Forest Model"
+author: "Cathal Sweeney (20320166)"
+date: "2024-03-05"
+output: html_document
+---
+
+```{r}
+library(ggcorrplot)
+library(car)
+library(tidyverse)
+library(VIM)
+library(tidymodels)
+library(vcd)
+
+```
+
+
+```{r}
+data_split <- initial_split(NBA_screened1, prop = 3/4)
+
+# Create data frames for the two sets:
+train_data <- training(data_split)
+test_data  <- testing(data_split)
+
+```
+
+#Cross Validation - creating 10 folds for  cross validation
+```{r}
+library(tidyverse)
+set.seed(345)
+folds <- vfold_cv(train_data, v = 10)
+folds
+```
+
+
+
+
+
+
+###random forest model
+```{r}
+rf_mod <- 
+  rand_forest(mtry = tune(), min_n = tune(), trees  = 1000) %>% 
+  set_engine("randomForest") %>% 
+  set_mode("regression") 
+```
+
+
+###tuning hyperparameters using mtry and min_n ## Number of trees is left at 1000 due to the potential computation time of tuning the number of trees.
+
+```{r}
+#Defining a grid to search across a range of hyperparameter values to find optimal performance
+randomforest_grid <- grid_regular(
+  mtry(range=c(5,10),trans = NULL),
+  min_n(range = c(50,250),trans = NULL),
+        levels = 5
+)
+randomforest_grid
+```
+
+
+```{r}
+set.seed(345)
+
+tree_wf <- workflow() %>%
+  add_model(rf_mod) %>%
+  add_formula(next_seas_bpm ~ft_per_g + ast_per_g + pts_per_g + mp  + efg_pct+ trb_per_g + gs + g + mp_per_g + fg_per_g + fga_per_g + fg_pct + fg3_per_g + fg3a_per_g  + fg2_per_g + fg2a_per_g + fg2_pct + fta_per_g + ft_pct + orb_per_g + orb_pct + drb_per_g + stl_per_g + blk_per_g + tov_per_g + pf_per_g + per + ts_pct + fta_per_fga_pct + drb_pct + trb_pct + ast_pct + stl_pct + blk_pct + tov_pct + usg_pct + ows + dws +pos +bpm + age + fg3a_per_fga_pct + vorp + mov + mov_adj + win_loss_pct +ws_per_48  )
+```
+
+```{r}
+set.seed(123)
+tune_res <- 
+  tree_wf %>% 
+  tune_grid(
+    resamples = folds, grid = randomforest_grid, 
+    metrics = metric_set(rmse)
+    )
+saveRDS(tune_res,file = "tuning_grid_rf_new.rds")
+```
+
+```{r}
+tune_res_new <- readRDS("tuning_grid_rf_new.rds")
+```
+
+
+```{r}
+show_best(tune_res_new, metric = "rmse")
+```
+
+``````{r}
+best_tree <- tune_res_new %>%
+  select_best("rmse")
+
+best_tree
+
+```{r}
+final_rf_wf <- 
+  tree_wf %>% 
+  finalize_workflow(best_tree)
+
+final_rf_wf
+```
+
+```{r}
+final_fit <- 
+  final_rf_wf %>%
+  fit_resamples(folds) 
+```
+
+```{r}
+final_fit %>%
+  collect_metrics()
+```

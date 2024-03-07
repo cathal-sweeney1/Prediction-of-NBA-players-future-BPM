@@ -1,0 +1,201 @@
+---
+title: "GLMNET"
+author: "Cathal Sweeney (20320166)"
+date: "2024-03-05"
+output: html_document
+---
+
+```{r}
+data_split <- initial_split(NBA_screened1, prop = 3/4)
+
+# Create data frames for the two sets:
+train_data <- training(data_split)
+test_data  <- testing(data_split)
+
+```
+
+#Cross Validation - creating 10 folds for  cross validation
+```{r}
+library(tidyverse)
+set.seed(345)
+folds <- vfold_cv(train_data, v = 10)
+folds
+```
+
+```{r}
+glmnet_mod_new <- 
+  linear_reg(penalty = tune(), mixture = tune()) %>% 
+  set_engine("glmnet") %>%
+  set_mode("regression")
+```
+
+##include all variables.
+```{r}
+glmnet_wflow <- 
+  workflow() %>% 
+  add_model(glmnet_mod_new) %>% 
+  add_formula(next_seas_bpm ~ft_per_g + ast_per_g + pts_per_g + mp  + efg_pct+ trb_per_g + gs + g + mp_per_g + fg_per_g + fga_per_g + fg_pct + fg3_per_g + fg3a_per_g  + fg2_per_g + fg2a_per_g + fg2_pct + fta_per_g + ft_pct + orb_per_g + orb_pct + drb_per_g + stl_per_g + blk_per_g + tov_per_g + pf_per_g + per + ts_pct + fta_per_fga_pct + drb_pct + trb_pct + ast_pct + stl_pct + blk_pct + tov_pct + usg_pct + ows + dws + ws + ws_per_48 +bpm + age + fg3a_per_fga_pct  + vorp + mov + mov_adj + win_loss_pct + pos)
+```
+
+
+
+```{r}
+glmnet_grid_new <- 
+  expand.grid(penalty = seq(0,2, .001),
+  mixture = seq(.1,1, .1))
+```
+
+
+```{r}
+#Finding the optimal hyperparameters across our created grid using cross validation 
+glmnet_res_new <- 
+  glmnet_wflow %>% 
+  tune_grid(
+    resamples = folds,
+    grid = glmnet_grid_new,
+    metrics = 
+  )
+glmnet_res_new
+collect_metrics(glmnet_res_new)
+```
+
+```{r}
+show_best(glmnet_res_new,"rmse")
+```
+
+```{r}
+glmnet_mod1 <- 
+  linear_reg(penalty = 0	 , mixture = 0.5  ) %>% 
+  set_engine("glmnet")
+```
+
+```{r}
+glmnet_wflow_new <- 
+  glmnet_wflow %>% 
+  update_model(glmnet_mod1)
+glmnet_wflow_new
+```
+
+```{r}
+set.seed(456)
+glmnet_fit <- 
+  glmnet_wflow_new %>% 
+  fit_resamples(folds)
+```
+
+
+```{r}
+collect_metrics(glmnet_fit)
+```
+
+```{r}
+
+library(glmnet)
+
+X <- model.matrix(next_seas_bpm ~ ft_per_g + ast_per_g + pts_per_g + mp  + efg_pct+ trb_per_g + gs + g + mp_per_g + fg_per_g + fga_per_g + fg_pct + fg3_per_g + fg3a_per_g  + fg2_per_g + fg2a_per_g + fg2_pct + fta_per_g + ft_pct + orb_per_g + orb_pct + drb_per_g + stl_per_g + blk_per_g + tov_per_g + pf_per_g + per + ts_pct + fta_per_fga_pct + drb_pct + trb_pct + ast_pct + stl_pct + blk_pct + tov_pct + usg_pct + ows + dws + ws + ws_per_48 +bpm + age + fg3a_per_fga_pct  + vorp + mov + mov_adj + win_loss_pct + pos , data = train_data)
+
+y = train_data$next_seas_bpm
+
+nba_glmnet_model <- glmnet(x = X, y = y, alpha = 0.5, lambda = 0) 
+
+broom::tidy(nba_glmnet_model) %>%
+slice(-1) %>%
+arrange(desc(abs(estimate))) %>%
+filter(abs(estimate) > 0.1) %>%
+ggplot(aes(y= term, x=estimate)) +
+geom_bar(stat="identity", position="dodge") +
+labs(y = "Predictors", x = "Estimate") + ggtitle("Feature Selection for GLMNET model")
+theme_minimal() 
+
+
+
+```
+
+#predictions
+
+
+
+```{r}
+view(test_data)
+```
+
+
+
+
+```{r}
+LeBron_data <- test_data %>%
+  filter(player == "LeBron James" & season == "2013")
+
+LeBron_predictions <- predict(glmnet_final_fit, new_data = LeBron_data)
+selected_columns <- LeBron_data %>%
+  select(player, season,next_seas_bpm)  
+combined_data1 <- bind_cols(selected_columns, LeBron_predictions)
+# Print the combined data
+combined_data1
+
+```
+
+```{r}
+Kawhi_data <- test_data %>%
+  filter(player == "Kawhi Leonard" & season == "2019")
+
+Kawhi_predictions <- predict(glmnet_final_fit, new_data = Kawhi_data)
+selected_columns <- Kawhi_data %>%
+  select(player, season,next_seas_bpm)  
+combined_data2 <- bind_cols(selected_columns, Kawhi_predictions)
+# Print the combined data
+combined_data2
+
+```
+
+
+```{r}
+Anthony_Davis_Data <- test_data %>%
+  filter(player == "Anthony Davis" & season == "2016")
+
+AD_predictions <- predict(glmnet_final_fit, new_data = Anthony_Davis_Data)
+selected_columns <- Anthony_Davis_Data %>%
+  select(player, season,next_seas_bpm)  
+combined_data3 <- bind_cols(selected_columns, AD_predictions)
+# Print the combined data
+combined_data3
+```
+
+```{r}
+Michael_Jordan_data  <- test_data %>%
+  filter(player == "Michael Jordan" & season == "1997")
+
+MJ_predictions <- predict(glmnet_final_fit, new_data = Michael_Jordan_data)
+selected_columns <- Michael_Jordan_data %>%
+  select(player, season,next_seas_bpm)  
+combined_data4 <- bind_cols(selected_columns, MJ_predictions)
+# Print the combined data
+combined_data4
+```
+
+```{r}
+Greg_Minor_data  <- test_data %>%
+  filter(player == "Greg Minor" & season == "1998")
+
+Greg_Minor_predictions <- predict(glmnet_final_fit, new_data = Greg_Minor_data)
+selected_columns <- Greg_Minor_data %>%
+  select(player, season,next_seas_bpm)  
+combined_data5 <- bind_cols(selected_columns, Greg_Minor_predictions)
+# Print the combined data
+combined_data5
+```
+
+```{r}
+library(dplyr)
+
+# Combine all the combined_data variables into one table
+final_combined_data <- bind_rows(combined_data1, combined_data2, combined_data3, combined_data4, combined_data5)
+
+# Print the final combined data
+final_combined_data
+
+```
+
+
+
+

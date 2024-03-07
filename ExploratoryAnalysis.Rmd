@@ -1,0 +1,116 @@
+---
+title: "Exploratory Analysis"
+author: "Cathal Sweeney (20320166)"
+date: "2024-03-01"
+output: html_document
+---
+
+```{r}
+library(ggcorrplot)
+library(car)
+library(tidyverse)
+library(VIM)
+library(tidymodels)
+library(vcd)
+
+```
+
+
+
+
+
+
+#investigating for missing data which may be present 
+```{r}
+NBAmodel <- read_csv("nba_with_next_seas_bmp.csv")
+
+NBAmodel %>%
+  filter(g>=15)
+
+ 
+VIM::aggr(NBAmodel)
+
+```
+
+#visualizing categorical data 
+```{r}
+train_data %>%
+  ggplot(aes(x = pos, y = bpm)) +
+  geom_boxplot()
+```
+```{r}
+train_data %>%
+  ggplot(aes(x = team_id, y = bpm)) +
+  geom_boxplot()
+```
+#Relationship between Categorical Data and our Outcome Variable 
+#no evidence to suggest being part of a particular team makes a significant impact on a players bpm scores 
+
+
+
+ 
+
+
+
+
+#investigating relationships of numerical variables in dataset with our outcome variable "Bpm" - 
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(rlang)
+predictor_variable <- "bpm"
+explanatory_variables <- c( "ft_per_g",  "ast_per_g" , "pts_per_g",  "mp",   "trb_per_g",  "gs", "g",  "mp_per_g" , "fg_per_g",  "fg_pct" , "fg3_per_g",    "fg2_pct" , "ft_pct", "orb_per_g",  "stl_per_g", "blk_per_g",  "tov_per_g" ,"pf_per_g",  "ts_pct" , "per", "fta_per_fga_pct",  "trb_pct" ,  "stl_pct" ,"tov_pct",  "usg_pct",  "age" , "fg3a_per_fga_pct", "vorp","win_loss_pct",)
+for (var in explanatory_variables) {
+  plot_title <- paste("Scatterplot with lowess smoother for", var)
+  p <- ggplot(NBA_screened1, aes(x = !!sym(var), y = !!sym(predictor_variable))) +
+    geom_point() +
+    geom_jitter(width = 0.2, height = 0.2, alpha = 0.4, color = "mediumpurple1") +
+    geom_smooth(method = "loess", formula = y ~ x, color = "royalblue4") +
+    labs(x = var, y = predictor_variable, title = plot_title) + 
+    theme_minimal() +
+    theme(plot.background = element_rect(fill = "whitesmoke"),
+          panel.grid.major = element_line(color = "azure3"),
+          panel.grid.minor = element_line(color = "azure3"),
+          legend.position = "bottom") +
+    scale_fill_brewer(palette = "Set3")
+  
+  print(p)
+}
+```
+
+#investigating correlation between numeric variables specifically for fitting a linear regression model 
+```{r}
+nba_next_season_model[sample(1:nrow(nba_next_season_model), 1000),] %>%
+  select_if(is.numeric) %>%
+  cor() %>%
+  ggcorrplot()
+```
+
+#Data Filtering 
+#Removal of NA values present in the dataset 
+
+```{r}
+set.seed(222)
+
+NBAcleanfullmodel1 <- 
+  NBAmodel %>%
+  select(player, next_seas_bpm ,pos, team_id,season,ft_per_g, ast_per_g, pts_per_g ,mp, bpm ,efg_pct, trb_per_g,gs,g,mp_per_g,fg_per_g,fga_per_g,fg_pct,fg3_per_g,fg3a_per_g,fg3_pct,fg2_per_g,fg2a_per_g,fg2_pct,fta_per_g,ft_pct,orb_per_g,orb_pct,drb_per_g,stl_per_g,blk_per_g,tov_per_g,pf_per_g,per,ts_pct,fta_per_fga_pct,drb_pct,trb_pct,ast_pct,stl_pct,blk_pct,tov_pct,usg_pct,ows,dws,ws,ws_per_48,obpm,dbpm,age,fg3a_per_fga_pct,vorp,mov,mov_adj,win_loss_pct) %>%
+  drop_na()
+```
+
+
+#Filtering out data with bpm  above 15 and below -2. This is removing any outliers that still may remain. We also removed players who played less than 15 games during the season as there stats may be skewed. For instance a player who plays 1 or 2 games may have a high bpm which would not be sustainable for a season. We believe that 15 games which represents almost a quarter of the season is an accurate measurement of a players contribution.
+```{r}
+NBA_screened1 <- NBAcleanfullmodel1 %>%
+  filter(g>=15) %>%
+  filter(!(next_seas_bpm >= 15 | next_seas_bpm <= -2)) %>%
+  filter(!(bpm >= 15 | bpm <= -2))
+```
+
+```{r}
+NBA_screened1 %>%
+  ggplot(aes(x=next_seas_bpm)) +
+  geom_histogram() +
+  ggtitle("Distribution of filtered next_seas_bpm")
+```
+
+
