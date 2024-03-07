@@ -32,7 +32,7 @@ set.seed(345)
 folds <- vfold_cv(train_data, v = 10)
 folds
 ```
-#variables for transformation
+#variables for transformation based on exploratory analysis
 #per,ts_pct,bpm,stl_pct,ws_per_48,fg2_pct,fg_pct,ft_pct,fg_pct,ft_pct,orb_per_g,pf_per_g,fta_per_fga_pct,fg3a_per_fga_pct
 
 ```{r}
