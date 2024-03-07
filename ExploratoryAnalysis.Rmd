@@ -1,6 +1,6 @@
 ---
 title: "Exploratory Analysis"
-author: "Cathal Sweeney (20320166)"
+author: "Cathal Sweeney & Eoghan Tinney "
 date: "2024-03-01"
 output: html_document
 ---
