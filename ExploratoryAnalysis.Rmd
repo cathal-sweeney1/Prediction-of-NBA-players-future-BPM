@@ -98,14 +98,12 @@ NBAcleanfullmodel1 <-
 ```
 
 
-#Filtering out data with bpm  above 15 and below -2. This is removing any outliers that still may remain. We also removed players who played less than 15 games during the season as there stats may be skewed. For instance a player who plays 1 or 2 games may have a high bpm which would not be sustainable for a season. We believe that 15 games which represents almost a quarter of the season is an accurate measurement of a players contribution.
+#Filtering out data : We removed players who played less than 15 games during the season as there stats may be skewed. For instance a player who plays 1 or 2 games may have a high bpm which would not be sustainable for a season. We believe that 15 games which represents almost a quarter of the season is an accurate measurement of a players contribution.
 ```{r}
 NBA_screened1 <- NBAcleanfullmodel1 %>%
-  filter(g>=15) %>%
-  filter(!(next_seas_bpm >= 15 | next_seas_bpm <= -2)) %>%
-  filter(!(bpm >= 15 | bpm <= -2))
+  filter(g>=15) 
 ```
-
+#checking the distribution of our outcome variable , we find that the assumption of normality has been satisfied upon the filtering of data
 ```{r}
 NBA_screened1 %>%
   ggplot(aes(x=next_seas_bpm)) +
