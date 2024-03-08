@@ -1,6 +1,6 @@
 ---
 title: "Random Forest Model"
-author: "Cathal Sweeney (20320166)"
+author: "Cathal Sweeney (20320166) & Eoghan Tinney"
 date: "2024-03-05"
 output: html_document
 ---
@@ -59,7 +59,7 @@ randomforest_grid <- grid_regular(
 randomforest_grid
 ```
 
-
+#random forest workflow 
 ```{r}
 set.seed(345)
 
@@ -67,7 +67,7 @@ tree_wf <- workflow() %>%
   add_model(rf_mod) %>%
   add_formula(next_seas_bpm ~ft_per_g + ast_per_g + pts_per_g + mp  + efg_pct+ trb_per_g + gs + g + mp_per_g + fg_per_g + fga_per_g + fg_pct + fg3_per_g + fg3a_per_g  + fg2_per_g + fg2a_per_g + fg2_pct + fta_per_g + ft_pct + orb_per_g + orb_pct + drb_per_g + stl_per_g + blk_per_g + tov_per_g + pf_per_g + per + ts_pct + fta_per_fga_pct + drb_pct + trb_pct + ast_pct + stl_pct + blk_pct + tov_pct + usg_pct + ows + dws +pos +bpm + age + fg3a_per_fga_pct + vorp + mov + mov_adj + win_loss_pct +ws_per_48  )
 ```
-
+#tuning the hyperparameters using k-fold cross-validation saving the computation as an .RDS
 ```{r}
 set.seed(123)
 tune_res <- 
@@ -87,7 +87,7 @@ tune_res_new <- readRDS("tuning_grid_rf_new.rds")
 ```{r}
 show_best(tune_res_new, metric = "rmse")
 ```
-
+#selecting the best hyperparameters based on tproviding the lowest error or RMSE
 ``````{r}
 best_tree <- tune_res_new %>%
   select_best("rmse")
@@ -101,13 +101,13 @@ final_rf_wf <-
 
 final_rf_wf
 ```
-
+Evaluating our newly fitted model using k-fold cross-validation
 ```{r}
 final_fit <- 
   final_rf_wf %>%
   fit_resamples(folds) 
 ```
-
+#Assessing the performance of our model on the general training data with the mean and standard error cross validated rmse 
 ```{r}
 final_fit %>%
   collect_metrics()
