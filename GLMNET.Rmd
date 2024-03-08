@@ -1,6 +1,6 @@
 ---
 title: "GLMNET"
-author: "Cathal Sweeney (20320166)"
+author: "Cathal Sweeney (20320166) & Eoghan Tinney"
 date: "2024-03-05"
 output: html_document
 ---
@@ -29,7 +29,7 @@ glmnet_mod_new <-
   set_mode("regression")
 ```
 
-##include all variables.
+##include all variablesin our workflow
 ```{r}
 glmnet_wflow <- 
   workflow() %>% 
@@ -38,7 +38,7 @@ glmnet_wflow <-
 ```
 
 
-
+#defining our tuning grid for the  hyperparameters of penalty and mixture in a Glmnet model
 ```{r}
 glmnet_grid_new <- 
   expand.grid(penalty = seq(0,2, .001),
@@ -47,7 +47,7 @@ glmnet_grid_new <-
 
 
 ```{r}
-#Finding the optimal hyperparameters across our created grid using cross validation 
+#Finding the optimal hyperparameters across our created grid using cross-validation (folds)
 glmnet_res_new <- 
   glmnet_wflow %>% 
   tune_grid(
@@ -58,24 +58,24 @@ glmnet_res_new <-
 glmnet_res_new
 collect_metrics(glmnet_res_new)
 ```
-
+#a tibble displaying the optimal values of hyperparameters which give the lowest RMSE
 ```{r}
 show_best(glmnet_res_new,"rmse")
 ```
-
+#specifying the hyperparameters and fitting the model
 ```{r}
 glmnet_mod1 <- 
   linear_reg(penalty = 0	 , mixture = 0.5  ) %>% 
   set_engine("glmnet")
 ```
-
+#new workflow containing updated hyperparameters
 ```{r}
 glmnet_wflow_new <- 
   glmnet_wflow %>% 
   update_model(glmnet_mod1)
 glmnet_wflow_new
 ```
-
+#Evaluating the model using k-fold cross-validation
 ```{r}
 set.seed(456)
 glmnet_fit <- 
@@ -87,7 +87,7 @@ glmnet_fit <-
 ```{r}
 collect_metrics(glmnet_fit)
 ```
-
+#creating a feature selection plot to highlight significant predictors in the Glmnet model
 ```{r}
 
 library(glmnet)
@@ -111,7 +111,7 @@ theme_minimal()
 
 ```
 
-#predictions
+#Making predictions of players BPM for the following season on the unseen data
 
 
 
