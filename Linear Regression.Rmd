@@ -1,6 +1,6 @@
 ---
 title: "Linear Regression"
-author: "Cathal Sweeney (20320166)"
+author: "Cathal Sweeney (20320166) & Eoghan Tinney"
 date: "2024-03-05"
 output: html_document
 ---
@@ -39,17 +39,17 @@ folds
 # Define your tuning grid
 degree_grid <- tibble(degree = seq(1, 5, by = 1))  # Degrees from 1 to 5
 ```
-
+#finding the optimal ploynomial degree of each variable using the step_poly function 
 ```{r}
 per_var <- recipe(next_seas_bpm ~ per, data = train_data) %>% step_poly(per, degree = tune())
 ```
-
+#creating a workflow for each variable
 ```{r}
 per_var_wf <- workflow() %>%
   add_recipe(per_var) %>%
   add_model(linear_reg())
 ```
-
+#tunes each variable workflow to find the optimal degree of polynomial
 ```{r}
 tuned_model <- per_var_wf %>%
   tune_grid(resamples = folds, grid = degree_grid, control = control_grid(verbose = TRUE))
@@ -372,30 +372,19 @@ lr_wf_new_fit <-
   fit(data = train_data)
 lr_wf_new_fit
 ```
-
+#performing k-fold cross-validation
 ```{r}
 linear_reg_new_fit <- lr_wf_new_fit %>%
   fit_resamples(folds)
 ```
-
+#gathering the mean and standard error cross validation rmse 
 
 ```{r}
 collect_metrics(linear_reg_new_fit)
 ```
 
 
-```{r}
-glmnet_fit
-```
 
-```{r}
-glmnet_final_fit <- glmnet_wflow_new %>% 
-  fit(data = train_data)
-
-library(yardstick)
-predict1 <- predict(glmnet_final_fit, new_data = test_data)
-rmse_vec(test_data$next_seas_bpm, estimate = predict1$.pred)
-```
 
 
 
